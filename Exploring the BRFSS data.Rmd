@@ -1,0 +1,130 @@
+---
+# Title: "Exploring the BRFSS data"
+# author: "Milind P Kshirsagar"
+# date: "July 30, 2020"
+# output: html_document
+#    fig_height: 4
+#    highlight: pygments
+#    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(knitr)
+```
+
+### Load data
+```{r load-data}
+load("brfss2013.RData")
+data=brfss2013
+```
+
+* * *
+
+## Part 1: Data
+The Behavioral Risk Factor Surveillance System (BRFSS) is the largest continuous health survey system in the world and it telephonically collects data in 50 states and 3 U.S. territories. The data is primarily related to resident health-related risk behaviors, chronic health conditions amongst the adult population, and preventive services used. Over the years the BRFSS has grown in to a powerful tool for planning and creating health promotion activities in the USA.
+
+Following are the some important aspects of BRFSS data.
+
+1) **What is the data is all about?**
+
+Answer: In the BRFSS data ("brfss2013""), 330 variables are used as metrics for studying health related issues of *491775* patients across the States. A sample is taken from the whole population, however, the data provides information for the US adult citizens only.
+
+2) **Why was the data collected?**
+
+Answer: The data was collected to draw meaningful conclusions, related to ill-health amongst U.S. adult population and to find out factors responsible for the same.
+
+3) **How was the data collected?**
+
+  The data was collected through the survey conducted, using landline and cellular telephone.
+
+  a) During landline telephonic survey, the technique of disproportionate stratified sampling (DSS) has been used and the interviewersdata was collected by the intervievers from a randomly selected adult in a given household.
+  
+  b) During cellular telephonic survey, the sample was randomly generated from a confirmed cellular area bound by a sampling frame. Adult residents of private houses as well as college housing were randomly surveyed  by the interviewers using a cellular telephone. 
+
+### Scope of inference
+
+The whole survey is an experimental study of observational nature and employs employs stratified design based on random sampling, providing scope for statistical inferences.
+
+Now let us move on to "research questions" i. e. part 2.
+
+* * *
+
+## Part 2: Research questions
+
+**Research quesion 1:**
+
+Does people sleeping lesser than an average person, have more poor mental healt days days than the earlier? The researchers have claimed that inadequate sleep can have a negative effect on the overall health of a person. 
+
+**Research quesion 2:**
+
+Are heavy drinking non-smokers healthier than the non heavy-drinking regular smokers? The basic investigation here is to evaluate the impact of smoking tobacco vs alcohol consumption on a person’s health to evaluate the worst of both.
+
+**Research quesion 3:**
+
+The question is releated to mental support for different genders. Basically, we would like to know if male get higher mental support than the female.
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+
+**Research quesion 1:**
+
+```{r}
+sldep <- data %>% filter(!is.na(sleptim1),!is.na(addepev2)) %>%
+  select(sleptim1,addepev2)
+  
+updep<- sldep %>% filter(sleptim1<5) %>%
+  group_by(addepev2) %>%
+  summarise(count=n())
+updep
+library(ggplot2)
+ggplot(data=updep,aes(x=addepev2,y=count))+geom_bar(stat="identity",color='green',fill='blue')+xlab("Depressive Order for those having less than 5 hours sleep?")+ylab("Number of USA citizens")
+```
+
+
+***From the bar chart, we can conclude that people are not having depressive order for less than five hours sleep is more than the people having depressive order under same condition, which is quiet surprising. This can lead to conclusion that the sleeping disorder has lower influence on depression. But, we cannot confidently say that since there could be many other associated health factors, responsible for this observation.***
+
+
+**Research Question 2:**
+
+```{r}
+smascr <- data %>% filter(!is.na(smoke100),!is.na(asthma3),!is.na(chcocncr)) %>%
+  select(smoke100,asthma3,chcocncr)
+smascr<- smascr %>% mutate(allyes= ifelse(smoke100=="Yes"& asthma3=="Yes" & chcocncr=="Yes","Yes","No"))
+all_yes<-smascr %>%
+  group_by(allyes) %>%
+  summarise(count=n())
+ggplot(data=all_yes,aes(x=allyes,y=count))+geom_bar(stat='identity')+xlab("Smoking+Asthma+Cancer")+ylab("Number of US Citizens")
+```
+
+***From the graph, we can conclude that the people having smoked at least 100 times, had asthama, and cancer related health complications are found to be very less as compared to those who donot have all these. From this, we can also speculate that cancer or asthma are not really caused by smoking. But, we can't confidently say anything since the sample might be influenced by factors such as financial status, habitat, and other factors.***
+
+
+**Research quesion 3:**
+
+```{r}
+life1<- data %>% filter(!is.na(lsatisfy),!is.na(emtsuprt),!is.na(cadult)) %>%
+  select(lsatisfy,emtsuprt,cadult)
+life1 <- life1 %>% mutate(male= ifelse(cadult=="Yes, male respondent",1,0))
+gender_supp<- life1 %>%
+  filter(lsatisfy=="Very satisfied" & emtsuprt=="Always") %>%
+  group_by(male) %>%
+  summarise(count=n())
+val=c("Female","Male")
+ggplot(data=gender_supp,aes(x=male,y=count,col=val))+geom_bar(stat='identity',fill='red')
+
+```
+
+
+***From the bar chart, we can conclude that the number of males are approximately equal to females. We can also conclude that, to a certain limit, male and female in US states had equal emotional support. However, the comculsion cannot be generalised to the entire US population and could have been influenced by many other factors.***
+
+**Milind P Kshirsagarl**
+{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
